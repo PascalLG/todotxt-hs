@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: aa57aeb1370608ee40eb722d9daff22c98dc4edbb8237290dd8aa11cc6ec7508
+-- hash: 505a5bcc2a1a74cf2cb3dc5406f2939185d684f080682ac7e703f3d8931a55eb
 
 name:           TodoTxt
 version:        1.0.0
@@ -36,6 +36,7 @@ library
   exposed-modules:
       CmdAdd
       CmdList
+      Console
       Environment
       Error
       TodoFile

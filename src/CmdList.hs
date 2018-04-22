@@ -35,6 +35,8 @@ import TodoFile
 
 -----------------------------------------------------------------------------
 
+-- | Parse arguments for the 'ls' command.
+--
 cmdList :: [String] -> IO ExitStatus
 cmdList args = do
     result <- parseArgsM args [OptionAll]
@@ -42,20 +44,20 @@ cmdList args = do
         Left errs        -> mapM_ putErr errs >> return StatusInvalidCommand
         Right (opts, xs) -> loadFileAndRun $ doList (OptionAll `elem` opts) xs
 
--- | Execute the 'list' command.
+-- | Execute the 'ls' command.
 --
 doList :: Bool -> [String] -> [Task] -> IO ExitStatus
 doList al patterns tasks = do
     let f1 = if al then id else filter (not . taskDeleted)
-    let f2 = if null patterns then id else filter (matchPattern (map T.pack patterns))
+    let f2 = if null patterns then id else filter (matchPattern (map (T.toCaseFold . T.pack) patterns))
     mapM_ (T.putStrLn . showTask) ((sort . f2 . f1) tasks)
     return StatusOK
 
+-- | Test if a task name contains all the words of a given
+-- list. Comparison is not case sensitive.
+--
 matchPattern :: [T.Text] -> Task -> Bool
-matchPattern patterns task = any contains patterns
-    where
-        contains :: T.Text -> Bool
-        contains = undefined
+matchPattern patterns task = let content = T.words $ T.toCaseFold $ taskName task
+                             in  all (flip elem content) patterns
 
 -----------------------------------------------------------------------------
-

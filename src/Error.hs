@@ -28,15 +28,21 @@ module Error (
 ) where
 
 import System.IO (hPutStrLn, stderr)
+import Console
 
 -----------------------------------------------------------------------------
+-- Error handling.
 
+-- | Type that represents exit status codes.
+--
 data ExitStatus =
-      StatusOK                  -- Should be first so fromEnum StatusOK == 0
+      StatusOK                  -- Should be first so that (fromEnum StatusOK) == 0
     | StatusInvalidCommand
     | StatusFailed
     deriving (Show, Enum, Eq)
 
+-- | Type that represents error conditions.
+--
 data Error =
       ErrorReadFile (Maybe FilePath) String
     | ErrorWriteFile (Maybe FilePath) String
@@ -57,7 +63,11 @@ renderError (ErrorWriteFile (Just path) desc)   = "cannot write file '" ++ path 
 renderError (ErrUnsupportedOption opt)          = "unsupported option: " ++ opt
 renderError (ErrExtraArgument arg)              = "extra argument: " ++ arg
 
+-- | Print an error on the standard error output.
+--
 putErr :: Error -> IO ()
-putErr err = hPutStrLn stderr ("error: " ++ show err)
+putErr err = do
+    console <- getConsoleMode
+    hPutStrLn stderr $ foreColor console AnsiRed ("error: " ++ show err)
 
 -----------------------------------------------------------------------------
