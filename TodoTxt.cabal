@@ -1,0 +1,77 @@
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: aa57aeb1370608ee40eb722d9daff22c98dc4edbb8237290dd8aa11cc6ec7508
+
+name:           TodoTxt
+version:        1.0.0
+description:    Please see the README on Github at <https://github.com/PascalLG/todotxt-hs#readme>
+homepage:       https://github.com/PascalLG/todotxt-hs#readme
+bug-reports:    https://github.com/PascalLG/todotxt-hs/issues
+author:         Pascal Levy
+maintainer:     pascal.levy@aequans.com
+copyright:      2018 Pascal Levy
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/PascalLG/todotxt-hs
+
+library
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , directory >=1.3
+    , filepath
+    , text
+    , time
+  exposed-modules:
+      CmdAdd
+      CmdList
+      Environment
+      Error
+      TodoFile
+  other-modules:
+      Paths_TodoTxt
+  default-language: Haskell2010
+
+executable TodoTxt-exe
+  main-is: Main.hs
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:
+      TodoTxt
+    , base >=4.7 && <5
+    , directory >=1.3
+    , filepath
+    , text
+    , time
+  other-modules:
+      Paths_TodoTxt
+  default-language: Haskell2010
+
+test-suite TodoTxt-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:
+      TodoTxt
+    , base >=4.7 && <5
+    , directory >=1.3
+    , filepath
+    , text
+    , time
+  other-modules:
+      Paths_TodoTxt
+  default-language: Haskell2010

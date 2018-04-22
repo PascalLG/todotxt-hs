@@ -1,2 +1,5 @@
 # todotxt-hs
-A ToDo list manager in Haskell.
+
+A simple command line interface to handle [TodoTxt](http://todotxt.org/) files.
+
+(Work in progress.)
