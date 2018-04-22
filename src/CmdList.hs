@@ -29,8 +29,9 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Control.Monad (mapM_)
 import Data.List (sort)
-import Error
+import Console
 import Environment
+import Error
 import TodoFile
 
 -----------------------------------------------------------------------------
@@ -50,7 +51,9 @@ doList :: Bool -> [String] -> [Task] -> IO ExitStatus
 doList al patterns tasks = do
     let f1 = if al then id else filter (not . taskDeleted)
     let f2 = if null patterns then id else filter (matchPattern (map (T.toCaseFold . T.pack) patterns))
-    mapM_ (T.putStrLn . showTask) ((sort . f2 . f1) tasks)
+    mode <- getConsoleMode
+    putStrLn "#   Pri Created    Description"
+    mapM_ (T.putStrLn . showTask mode) ((sort . f2 . f1) tasks)
     return StatusOK
 
 -- | Test if a task name contains all the words of a given

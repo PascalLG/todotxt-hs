@@ -39,7 +39,7 @@ import System.Directory (getHomeDirectory, copyFile, removeFile)
 import System.FilePath (addTrailingPathSeparator, normalise, (<.>))
 import Data.List (isPrefixOf, unfoldr)
 import Data.Maybe (isJust)
-import Data.Char (ord, chr)
+import Data.Char (ord, chr, isSpace)
 import Data.Time (Day)
 import Data.Time.Calendar (fromGregorian, toGregorian)
 import Control.Exception (try, tryJust, catch)
@@ -48,16 +48,21 @@ import System.IO.Error (isDoesNotExistError, ioeGetErrorString, ioeGetFileName)
 import Text.Printf
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import Console
 import Error
 
 -----------------------------------------------------------------------------
+-- Tasks.
 
-data Task = Task { taskRank :: Int
-                 , taskDeleted :: Bool
-                 , taskPriority :: Maybe Int
-                 , taskCompletionDate :: Maybe Day
-                 , taskCreationDate :: Maybe Day
-                 , taskName :: T.Text
+-- | Record representing a task. The ToDo list file is a made of
+-- a list of tasks.
+--
+data Task = Task { taskRank :: Int                      -- rank in the file
+                 , taskDeleted :: Bool                  -- whether the task is done or not
+                 , taskPriority :: Maybe Int            -- priority (between 0 and 25)
+                 , taskCompletionDate :: Maybe Day      -- completion date
+                 , taskCreationDate :: Maybe Day        -- creation date
+                 , taskName :: T.Text                   -- task description
                  } deriving (Show, Eq)
 
 instance Ord Task where
@@ -67,18 +72,40 @@ instance Ord Task where
     compare (Task _  _  (Just _)  _ _ _) (Task _  _  (Nothing) _ _ _)            = LT
     compare (Task r1 _  _         _ _ _) (Task r2 _  _         _ _ _)            = compare r1 r2
 
-showTask :: Task -> T.Text
-showTask (Task rank del pri compl creat name) = (if del then T.intersperse '\x0336' else id) line 
+-- | Print a task. The output is properly formatted in columns, and 
+-- context and project tags are colourised.
+--
+showTask :: ConsoleMode -> Task -> T.Text
+showTask mode (Task rank del pri _ creat name)
+     | del       = T.intersperse '\x0336' $ line ModeBasic
+     | otherwise = line mode
     where
-        line :: T.Text
-        line = T.concat [showRank rank, showPriority pri, showDate compl, showDate creat, name ]
+        line :: ConsoleMode -> T.Text
+        line cm = T.concat [ printRank cm rank
+                           , T.singleton ' '
+                           , printPri cm pri
+                           , T.singleton ' '
+                           , printDate creat
+                           , T.singleton ' '
+                           , printDesc cm name ]
 
-        showRank :: Int -> T.Text
-        showRank x = T.pack $ printf "%03d " x
+        printRank :: ConsoleMode -> Int -> T.Text
+        printRank cm x = foreColor cm AnsiYellow (T.pack $ printf "%03d" x)
 
-        showPriority :: Maybe Int -> T.Text
-        showPriority (Just x) = T.pack $ '(' : chr (x + 64) : ") "
-        showPriority Nothing  = T.pack "    "
+        printPri :: ConsoleMode -> Maybe Int -> T.Text
+        printPri cm (Just x) = foreColor cm AnsiGreen (T.pack $ '(' : chr (x + 64) : ")")
+        printPri _  Nothing  = T.pack "   "
+
+        printDate :: Maybe Day -> T.Text
+        printDate d@(Just _) = showDate d
+        printDate Nothing    = T.pack "          "
+
+        printDesc :: ConsoleMode -> T.Text -> T.Text
+        printDesc cm t = T.intercalate (T.singleton ' ') (map colorize (T.split isSpace t))
+            where colorize word
+                    | "@" `T.isPrefixOf` word = foreColor cm AnsiMagenta word
+                    | "+" `T.isPrefixOf` word = foreColor cm AnsiCyan word
+                    | otherwise               = word
 
 -----------------------------------------------------------------------------
 -- File handling.

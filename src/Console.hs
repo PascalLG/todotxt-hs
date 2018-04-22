@@ -23,11 +23,12 @@
 
 module Console (
       AnsiColor(..)
-    , ConsoleMode
+    , ConsoleMode(..)
     , getConsoleMode
     , foreColor
 ) where
 
+import qualified Data.Text as T
 import System.IO (hIsTerminalDevice, stdout)
 import System.Environment (lookupEnv)
 
@@ -83,8 +84,8 @@ ansiCodeForColor color = "\ESC[" ++ (show (30 + fromEnum color)) ++ "m"
 -- it in the specified colour. (This is not reentrant, due to the
 -- way ANSI escape sequences work.)
 --
-foreColor :: ConsoleMode -> AnsiColor -> String -> String
+foreColor :: ConsoleMode -> AnsiColor -> T.Text -> T.Text
 foreColor ModeBasic _     text = text
-foreColor _         color text = (ansiCodeForColor color) ++ text ++ "\ESC[39m"
+foreColor _         color text = T.pack (ansiCodeForColor color) `T.append` text `T.append` T.pack "\ESC[39m"
 
 -----------------------------------------------------------------------------

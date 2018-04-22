@@ -27,7 +27,9 @@ module Error (
     , putErr
 ) where
 
-import System.IO (hPutStrLn, stderr)
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import System.IO (stderr)
 import Console
 
 -----------------------------------------------------------------------------
@@ -68,6 +70,6 @@ renderError (ErrExtraArgument arg)              = "extra argument: " ++ arg
 putErr :: Error -> IO ()
 putErr err = do
     console <- getConsoleMode
-    hPutStrLn stderr $ foreColor console AnsiRed ("error: " ++ show err)
+    T.hPutStrLn stderr $ foreColor console AnsiRed (T.pack ("error: " ++ show err))
 
 -----------------------------------------------------------------------------
