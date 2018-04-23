@@ -56,7 +56,7 @@ doList al patterns tasks = do
     mapM_ (T.putStrLn . showTask mode) ((sort . f2 . f1) tasks)
     return StatusOK
 
--- | Test if a task name contains all the words of a given
+-- | Test if a task contains all the words of a given
 -- list. Comparison is not case sensitive.
 --
 matchPattern :: [T.Text] -> Task -> Bool

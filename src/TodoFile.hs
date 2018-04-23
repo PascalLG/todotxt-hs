@@ -37,7 +37,7 @@ module TodoFile (
 import System.Environment (lookupEnv)
 import System.Directory (getHomeDirectory, copyFile, removeFile)
 import System.FilePath (addTrailingPathSeparator, normalise, (<.>))
-import Data.List (isPrefixOf, unfoldr)
+import Data.List (isPrefixOf, unfoldr, sortBy)
 import Data.Maybe (isJust)
 import Data.Char (ord, chr, isSpace)
 import Data.Time (Day)
@@ -227,8 +227,16 @@ saveFile ts = do
 -- in each Task record is ignored: tasks are simply written in order.
 --
 generateFile :: [Task] -> T.Text
-generateFile = T.unlines . map printTask
+generateFile = T.intercalate "\n" . assemble 1 . sortBy compareRank
     where
+        compareRank :: Task -> Task -> Ordering
+        compareRank (Task r1 _ _ _ _ _) (Task r2 _ _ _ _ _) = compare r1 r2
+
+        assemble :: Int -> [Task] -> [T.Text]
+        assemble _ [] = []
+        assemble r l@(t@(Task rn _ _ _ _ _):ts) | r == rn   = printTask t : assemble (r + 1) ts
+                                                | otherwise = T.empty : assemble (r + 1) l
+
         printTask :: Task -> T.Text
         printTask (Task _ del pri compl creat name) = T.concat [printDel del, printPri pri, printDate compl, printDate creat, name]
 

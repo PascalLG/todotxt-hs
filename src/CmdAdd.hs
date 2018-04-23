@@ -25,9 +25,47 @@ module CmdAdd (
       cmdAdd
 ) where
 
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import Data.Time.Clock (UTCTime(..), getCurrentTime)
+import Data.Time (Day)
+import Console
+import Environment
 import Error
+import TodoFile
 
+-----------------------------------------------------------------------------
+
+-- | Parse arguments for the 'add' command.
+--
 cmdAdd :: [String] -> IO ExitStatus
-cmdAdd = undefined
+cmdAdd args = do
+    result <- parseArgsM args []
+    case result of
+        Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
+        Right (_, ts) -> loadFileAndRun $ doAdd ts
+
+-- | Execute the 'add' command.
+--
+doAdd :: [String] -> [Task] -> IO ExitStatus
+doAdd names tasks = do
+    today <- utctDay <$> getCurrentTime
+    let newtasks = map (makeTask today) (zip names [maximum (map taskRank tasks) + 1..])
+    status <- saveFile (tasks ++ newtasks)
+    case status of
+        Left err -> putErr err >> return StatusFailed
+        Right _  -> do
+            mode <- getConsoleMode
+            putStrLn "Added:"
+            mapM_ (T.putStrLn . showTask mode) newtasks
+            return StatusOK
+    where
+        makeTask :: Day -> (String, Int) -> Task
+        makeTask date (name, rank) = Task { taskRank = rank
+                                          , taskDeleted = False
+                                          , taskPriority = Nothing
+                                          , taskCompletionDate = Nothing
+                                          , taskCreationDate = Just date
+                                          , taskName = T.pack name }
 
 -----------------------------------------------------------------------------
