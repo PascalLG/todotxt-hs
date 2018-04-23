@@ -62,7 +62,7 @@ doAdd names tasks = do
     where
         makeTask :: Day -> (String, Int) -> Task
         makeTask date (name, rank) = Task { taskRank = rank
-                                          , taskDeleted = False
+                                          , taskDone = False
                                           , taskPriority = Nothing
                                           , taskCompletionDate = Nothing
                                           , taskCreationDate = Just date

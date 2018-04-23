@@ -58,7 +58,7 @@ import Error
 -- a list of tasks.
 --
 data Task = Task { taskRank :: Int                      -- rank in the file
-                 , taskDeleted :: Bool                  -- whether the task is done or not
+                 , taskDone :: Bool                     -- whether the task is done or not
                  , taskPriority :: Maybe Int            -- priority (between 0 and 25)
                  , taskCompletionDate :: Maybe Day      -- completion date
                  , taskCreationDate :: Maybe Day        -- creation date
@@ -76,8 +76,8 @@ instance Ord Task where
 -- context and project tags are colourised.
 --
 showTask :: ConsoleMode -> Task -> T.Text
-showTask mode (Task rank del pri _ creat name)
-     | del       = T.intersperse '\x0336' $ line ModeBasic
+showTask mode (Task rank done pri _ creat name)
+     | done      = T.intersperse '\x0336' $ line ModeBasic
      | otherwise = line mode
     where
         line :: ConsoleMode -> T.Text
@@ -164,7 +164,7 @@ parseFile content = filter (not . T.null . taskName)
         emptyTask rank = Task rank False Nothing Nothing Nothing T.empty
 
         parseLine :: Int -> (String, Task) -> (String, Task)
-        parseLine 0 ('x':' ':xs, t)         = parseLine 1 (xs, t { taskDeleted = True })
+        parseLine 0 ('x':' ':xs, t)         = parseLine 1 (xs, t { taskDone = True })
         parseLine 0 st                      = parseLine 1 st
         parseLine 1 (' ':xs, t)             = parseLine 1 (xs, t)
         parseLine 1 ('(':p:')':' ':xs, t)
@@ -223,8 +223,9 @@ saveFile ts = do
               return $ Right ())
           (\exc -> return $ Left (ErrorWriteFile (ioeGetFileName exc) (ioeGetErrorString exc)))
 
--- | Generate the ToDo file content from a list of tasks. The rank information
--- in each Task record is ignored: tasks are simply written in order.
+-- | Generate the ToDo file content from a list of tasks. Each task is
+-- emitted on the line corresponding to its rank, inserting blank lines
+-- if necessary.
 --
 generateFile :: [Task] -> T.Text
 generateFile = T.intercalate "\n" . assemble 1 . sortBy compareRank
@@ -238,11 +239,11 @@ generateFile = T.intercalate "\n" . assemble 1 . sortBy compareRank
                                                 | otherwise = T.empty : assemble (r + 1) l
 
         printTask :: Task -> T.Text
-        printTask (Task _ del pri compl creat name) = T.concat [printDel del, printPri pri, printDate compl, printDate creat, name]
+        printTask (Task _ done pri compl creat name) = T.concat [printDone done, printPri pri, printDate compl, printDate creat, name]
 
-        printDel :: Bool -> T.Text
-        printDel True = T.pack "x "
-        printDel _    = T.empty
+        printDone :: Bool -> T.Text
+        printDone True = T.pack "x "
+        printDone _    = T.empty
 
         printPri :: Maybe Int -> T.Text
         printPri (Just x) = T.pack $ '(' : chr (x + 64) : ") "

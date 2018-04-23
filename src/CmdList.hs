@@ -49,7 +49,7 @@ cmdList args = do
 --
 doList :: Bool -> [String] -> [Task] -> IO ExitStatus
 doList al patterns tasks = do
-    let f1 = if al then id else filter (not . taskDeleted)
+    let f1 = if al then id else filter (not . taskDone)
     let f2 = if null patterns then id else filter (matchPattern (map (T.toCaseFold . T.pack) patterns))
     mode <- getConsoleMode
     putStrLn "#   Pri Created    Description"
