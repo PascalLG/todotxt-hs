@@ -50,6 +50,8 @@ data Error =
     | ErrorWriteFile (Maybe FilePath) String
     | ErrUnsupportedOption String
     | ErrExtraArgument String
+    | ErrInvalidPriority
+    | ErrUnknownTask Int
     deriving (Eq)
 
 instance Show Error where
@@ -64,6 +66,8 @@ renderError (ErrorWriteFile Nothing desc)       = "cannot write file: " ++ desc
 renderError (ErrorWriteFile (Just path) desc)   = "cannot write file '" ++ path ++ "': " ++ desc
 renderError (ErrUnsupportedOption opt)          = "unsupported option: " ++ opt
 renderError (ErrExtraArgument arg)              = "extra argument: " ++ arg
+renderError (ErrInvalidPriority)                = "invalid command, type \"todo help pri\" for more information"
+renderError (ErrUnknownTask num)                = "invalid task number #" ++ show num
 
 -- | Print an error on the standard error output.
 --

@@ -28,6 +28,7 @@ import System.Exit (exitWith, ExitCode(..))
 import Error
 import CmdAdd
 import CmdList
+import CmdPriority
 
 main :: IO ()
 main = do
@@ -38,6 +39,7 @@ main = do
 run :: [String] -> IO ExitStatus
 run ("add":xs)  = cmdAdd xs
 run ("ls":xs)   = cmdList xs
+run ("pri":xs)  = cmdPriority xs
 run (xs)        = cmdList xs
 
 -----------------------------------------------------------------------------
