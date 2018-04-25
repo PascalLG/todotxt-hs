@@ -38,12 +38,14 @@ import Error
 --
 data Option =
       OptionAll
+    | OptionRemove
     deriving (Show, Ord, Eq)
 
 -- | Map between option flags, option letters and option full names.
 --
 supportedOptions :: [(Option, Char, String)]
-supportedOptions = [( OptionAll,    'a', "all"     )]
+supportedOptions = [ ( OptionAll,    'a', "all"     )
+                   , ( OptionRemove, 'r', "remove"  )]
 
 -- | Lookup a short option (from its letter).
 --

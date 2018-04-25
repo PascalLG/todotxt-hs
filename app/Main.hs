@@ -29,6 +29,7 @@ import Error
 import CmdAdd
 import CmdList
 import CmdPriority
+import CmdDone
 
 main :: IO ()
 main = do
@@ -41,6 +42,7 @@ run ("add":xs)      = cmdAdd xs
 run ("ls":xs)       = cmdList xs
 run ("pri":xs)      = cmdPri xs
 run ("depri":xs)    = cmdDepri xs
+run ("do":xs)       = cmdDone xs
 run (xs)            = cmdList xs
 
 -----------------------------------------------------------------------------

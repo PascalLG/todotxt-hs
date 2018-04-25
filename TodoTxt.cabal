@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d76323767547a4cb44bc61cc7a9b75baae460f1efefad2c0599e0b7ad77d6722
+-- hash: b67be3268a37689a1b0fbcfbafca10ea628d7ccb3c26768f2daa405653290d18
 
 name:           TodoTxt
 version:        1.0.0
@@ -35,6 +35,7 @@ library
     , time
   exposed-modules:
       CmdAdd
+      CmdDone
       CmdList
       CmdPriority
       Console

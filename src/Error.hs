@@ -52,6 +52,7 @@ data Error =
     | ErrExtraArgument String
     | ErrInvalidPriority String
     | ErrUnknownTask Int
+    | ErrInvalidTask String
     deriving (Eq)
 
 instance Show Error where
@@ -67,7 +68,8 @@ renderError (ErrorWriteFile (Just path) desc)   = "cannot write file '" ++ path 
 renderError (ErrUnsupportedOption opt)          = "unsupported option: " ++ opt
 renderError (ErrExtraArgument arg)              = "extra argument: " ++ arg
 renderError (ErrInvalidPriority cmd)            = "invalid command, type \"todo help " ++ cmd ++ "\" for more information"
-renderError (ErrUnknownTask num)                = "invalid task number #" ++ show num
+renderError (ErrUnknownTask num)                = "invalid task number " ++ show num
+renderError (ErrInvalidTask str)                = "invalid task number " ++ str
 
 -- | Print an error on the standard error output.
 --

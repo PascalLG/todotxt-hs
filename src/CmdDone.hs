@@ -21,12 +21,11 @@
 -- THE SOFTWARE.
 -----------------------------------------------------------------------------
 
-module CmdPriority (
-      cmdPri
-    , cmdDepri
+module CmdDone (
+      cmdDone
 ) where
 
-import Data.Char (isDigit, ord, chr)
+import Data.Char (isDigit)
 import Data.List (partition)
 import Environment
 import Error
@@ -34,43 +33,30 @@ import TodoFile
 
 -----------------------------------------------------------------------------
 
--- | Parse arguments for the 'pri' command.
+-- | Parse arguments for the 'do' command.
 --
-cmdPri :: [String] -> IO ExitStatus
-cmdPri args = do
-    result <- parseArgsM args []
+cmdDone :: [String] -> IO ExitStatus
+cmdDone args = do
+    result <- parseArgsM args [OptionRemove]
     case result of
-        Right (_, [rank, [pri]]) | all isDigit rank && pri >= 'A' && pri <= 'Z' 
-                      -> loadFileAndRun $ doPriority (read rank) (Just (ord pri - 64))
-        Right (_, _)  -> putErr (ErrInvalidPriority "pri") >> return StatusInvalidCommand
+        Right (opts, [rank]) | all isDigit rank 
+                      -> loadFileAndRun $ doDone (OptionRemove `elem` opts) (read rank)
+        Right (_, _)  -> putErr (ErrInvalidPriority "do") >> return StatusInvalidCommand
         Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
 
--- | Parse arguments for the 'depri' command.
+-- | Execute the 'do' command.
 --
-cmdDepri :: [String] -> IO ExitStatus
-cmdDepri args = do
-    result <- parseArgsM args []
-    case result of
-        Right (_, [rank]) | all isDigit rank 
-                      -> loadFileAndRun $ doPriority (read rank) Nothing
-        Right (_, _)  -> putErr (ErrInvalidPriority "depri") >> return StatusInvalidCommand
-        Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
-
--- | Execute the 'pri' or 'depri' command.
---
-doPriority :: Int -> Maybe Int -> [Task] -> IO ExitStatus
-doPriority rank pri = update . partition ((== rank) . taskRank)
+doDone :: Bool -> Int -> [Task] -> IO ExitStatus
+doDone remove rank = update . partition ((== rank) . taskRank)
     where
         update :: ([Task], [Task]) -> IO ExitStatus
         update ([match], rest) = do
-            status <- saveFile $ match {taskPriority = pri } : rest
+            let newtasks = if remove then rest 
+                                     else match { taskDone = True } : rest
+            status <- saveFile newtasks
             case status of
                 Left err -> putErr err >> return StatusFailed
-                Right _  -> do
-                    putStrLn $ case pri of
-                        Nothing -> "TODO: task #" ++ (show rank) ++ " deprioritized"
-                        Just p  -> "TODO: task #" ++ (show rank) ++ " prioritized (" ++ [chr (p + 64)] ++ ")"
-                    return StatusOK
+                Right _  -> putStrLn ("TODO: task #" ++ (show rank) ++ " marked as done") >> return StatusOK
         update ([], _) = putErr (ErrUnknownTask rank) >> return StatusInvalidCommand
         update _       = error "unexpected state"
 
