@@ -22,12 +22,13 @@
 -----------------------------------------------------------------------------
 
 module CmdPriority (
-      cmdPriority
+      cmdPri
+    , cmdDepri
 ) where
 
 -- import qualified Data.Text as T
 -- import qualified Data.Text.IO as T
-import Data.Char (isDigit, ord)
+import Data.Char (isDigit, ord, chr)
 import Data.List (partition)
 import Environment
 import Error
@@ -37,30 +38,42 @@ import TodoFile
 
 -- | Parse arguments for the 'pri' command.
 --
-cmdPriority :: [String] -> IO ExitStatus
-cmdPriority args = do
+cmdPri :: [String] -> IO ExitStatus
+cmdPri args = do
     result <- parseArgsM args []
     case result of
-        Right (_, [rank, [pri]])
-             | all isDigit rank && pri >= 'A' && pri <= 'Z' -> loadFileAndRun $ doPriority (read rank) pri
-        Right (_, _)  -> putErr (ErrInvalidPriority) >> return StatusInvalidCommand
+        Right (_, [rank, [pri]]) | all isDigit rank && pri >= 'A' && pri <= 'Z' 
+                      -> loadFileAndRun $ doPriority (read rank) (Just (ord pri - 64))
+        Right (_, _)  -> putErr (ErrInvalidPriority "pri") >> return StatusInvalidCommand
         Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
 
--- | Execute the 'pri' command.
+-- | Parse arguments for the 'depri' command.
 --
-doPriority :: Int -> Char -> [Task] -> IO ExitStatus
-doPriority rank pri tasks = do
-    let (match, rest) = partition ((== rank) . taskRank) tasks
-    if null match then putErr (ErrUnknownTask rank) >> return StatusInvalidCommand
-                  else update (head match) rest
+cmdDepri :: [String] -> IO ExitStatus
+cmdDepri args = do
+    result <- parseArgsM args []
+    case result of
+        Right (_, [rank]) | all isDigit rank 
+                      -> loadFileAndRun $ doPriority (read rank) Nothing
+        Right (_, _)  -> putErr (ErrInvalidPriority "depri") >> return StatusInvalidCommand
+        Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
+
+-- | Execute the 'pri' or 'depri' command.
+--
+doPriority :: Int -> Maybe Int -> [Task] -> IO ExitStatus
+doPriority rank pri = update . partition ((== rank) . taskRank)
     where
-        update :: Task -> [Task] -> IO ExitStatus
-        update t rest = do
-            status <- saveFile $ t {taskPriority = Just (ord pri - 64) } : rest
+        update :: ([Task], [Task]) -> IO ExitStatus
+        update ([match], rest) = do
+            status <- saveFile $ match {taskPriority = pri } : rest
             case status of
                 Left err -> putErr err >> return StatusFailed
                 Right _  -> do
-                    putStrLn $ "TODO: task #" ++ (show rank) ++ " prioritized (" ++ [pri] ++ ")"
+                    putStrLn $ case pri of
+                        Nothing -> "TODO: task #" ++ (show rank) ++ " deprioritized"
+                        Just p  -> "TODO: task #" ++ (show rank) ++ " prioritized (" ++ [chr (p + 64)] ++ ")"
                     return StatusOK
+        update ([], _) = putErr (ErrUnknownTask rank) >> return StatusInvalidCommand
+        update _       = error "unexpected state"
 
 -----------------------------------------------------------------------------

@@ -37,9 +37,10 @@ main = do
                                      else ExitFailure (fromEnum status)
 
 run :: [String] -> IO ExitStatus
-run ("add":xs)  = cmdAdd xs
-run ("ls":xs)   = cmdList xs
-run ("pri":xs)  = cmdPriority xs
-run (xs)        = cmdList xs
+run ("add":xs)      = cmdAdd xs
+run ("ls":xs)       = cmdList xs
+run ("pri":xs)      = cmdPri xs
+run ("depri":xs)    = cmdDepri xs
+run (xs)            = cmdList xs
 
 -----------------------------------------------------------------------------
