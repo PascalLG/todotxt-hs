@@ -8,7 +8,7 @@ This application is at an early stage of development. Use it at your own risk.
 
 This application is designed for Linux and macOS. (I choose not to support Windows because this kind of tool is not much in the MS philosophy, moreover Windows has a poor support for command line: no UTF-8 or ANSI escape sequences by default.)
 
-There is no installer yet. This application is a regular Haskell project based on Stack and Cabal. To install, clone the repository, build with `stack build` and copy the executable file to `/usr/local/bin/todo`.
+As this application is not officially released yet, there is no installer. It is a regular Haskell project based on Stack and Cabal. To install, clone the repository, build with `stack build` and copy the executable file to `/usr/local/bin/todo`.
 
 The todo file is by default `~/todo.txt`. If this file does not exist, it is created the first time you add a task. You can change this default location by setting the `TODOTXT` environment variable to a valid path. For example, if you want to share your todo list among several computers, just move the default location to your dropbox (or [nubo](https://github.com/PascalLG/Nubo) 😉) by adding the following line to your `.bashrc`:
 
@@ -30,7 +30,7 @@ To list the tasks in your todo list, type:
 todo ls
 ```
 
-The first column displays the task rank (actually the line number in the todo file). This number is used to refer to tasks in other commands. The following columns display the priority (if any) as a letter from A to Z, the creation date, and the task description. The list is sorted by decreasing priority. Tasks having no priority come at the end of the list. Although the file format allows for a completion date, it is never displayed.
+The first column displays the task rank (actually the line number in the todo file). This number is used to refer to tasks in other commands. The following columns display the priority (if any) as a letter from A to Z, the creation date, and the task description. The list is sorted by decreasing priority. Tasks having no priority come at the end of the list. Although the file format allows for a completion date, it is currently ignored.
 
 Finished tasks are not listed by default. To list them as well, add the `--all` flag:
 
@@ -44,7 +44,7 @@ You can filter tasks by giving keywords (or tags, see below) after the command. 
 todo ls @phone mom
 ```
 
-Comparison is not case sensitive.
+When processing keywrods, comparison is not case sensitive.
 
 ### Adding tasks
 
@@ -54,17 +54,17 @@ To add a task, type:
 todo add <task description>
 ```
 
-Do not forget the quotes around your description to prevent `bash` interpreting spaces and special characters. You can also provide several task in the same commands. For example:
+Do not forget quotes around your description to prevent `bash` interpreting spaces and special characters. You can also provide several task in the same commands. For example:
 
 ```
 todo add "Reply to John's mail"
-todo add "Buy some potatoes" "Read The Handmaid's tale"
+todo add "Buy some potatoes" "Read The Handmaid's Tale"
 ```
 
 A task description can contain tags.
 
-* *Project* tags start with a plus sign (+). They indicate the project this task belongs to: +TodoTxt, +Nubo…
-* *Context* tags start with an at sign (@). They indicate a context (or a type) of task: @phone, @mail, @dev, @shopping…
+* *Project* tags start with a plus sign (+). They indicate the project this task belongs to: `+TodoTxt`, `+Nubo`…
+* *Context* tags start with an at sign (@). They indicate a context (or a type) of task: `@phone`, `@mail`, `@shopping`…
 
 For example:
 
@@ -72,11 +72,11 @@ For example:
 todo add "Create macOS and Debian packages for +TodoTxt @dev"
 ```
 
-You can use as many tags you wish in a task description. In task listings, tags are syntax-colourised to help identify them. Of course, a tag is just a convention, it is not interpreted by TodoTxt. You can assign a different meaning to + and @ tags if you wish.
+You can use as many tags you wish in a task description. In task listings, tags are syntax-colourised to help identify them. Of course, a tag is just a convention, it is not interpreted by the application. You can assign a different meaning to + and @ tags if you wish.
 
 ### Prioritising tasks
 
-The priority is represented by a letter from A to Z, A being the most important tasks and Z the less important ones. To assign a priority to a task, type:
+The priority is represented by a letter from A to Z, A indicating the most important tasks and Z the less important ones. To assign a task a priority, type:
 
 ```
 todo pri <rank> <priority>
@@ -105,7 +105,7 @@ To mark a task as done, type:
 todo do <rank>
 ```
 
-A done task no longer appears in listing, unless the `--all` flag is specified. To completely remove a task from the todo list, add the `--remove` flag:
+A done task no longer appears in listing (unless the `--all` flag is specified) but it is still present in the todo list. To completely remove a task, add the `--remove` flag:
 
 ```
 todo do --remove <rank>
