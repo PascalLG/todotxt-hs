@@ -32,10 +32,10 @@ todo ls
 
 The first column displays the task rank (actually the line number in the todo file). This number is used to refer to tasks in other commands. The following columns display the priority (if any) as a letter from A to Z, the creation date, and the task description. The list is sorted by decreasing priority. Tasks having no priority come at the end of the list. Although the file format allows for a completion date, it is currently ignored.
 
-Finished tasks are not listed by default. To list them as well, add the `--all` flag:
+Finished tasks are not listed by default. To list them as well, add the `--done` flag:
 
 ```
-todo ls --all
+todo ls --done
 ```
 
 You can filter tasks by giving keywords (or tags, see below) after the command. Only tasks containing *all* the specified keywords and tags are listed. For example:
@@ -105,7 +105,7 @@ To mark a task as done, type:
 todo done <rank>
 ```
 
-A done task no longer appears in listing (unless the `--all` flag is specified) but it is still present in the todo list. Alternatively, to completely remove a task, add the `--remove` flag:
+A done task no longer appears in listing (unless the `--done` flag is specified) but it is still present in the todo list. Alternatively, to completely remove a task, add the `--remove` flag:
 
 ```
 todo done --remove <rank>

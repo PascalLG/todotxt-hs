@@ -37,14 +37,14 @@ import Error
 -- | An enumeration of all possible options the application supports.
 --
 data Option =
-      OptionAll
+      OptionDone
     | OptionRemove
     deriving (Show, Ord, Eq)
 
 -- | Map between option flags, option letters and option full names.
 --
 supportedOptions :: [(Option, Char, String)]
-supportedOptions = [ ( OptionAll,    'a', "all"     )
+supportedOptions = [ ( OptionDone,   'd', "done"    )
                    , ( OptionRemove, 'r', "remove"  )]
 
 -- | Lookup a short option (from its letter).

@@ -40,9 +40,9 @@ import TodoFile
 --
 cmdList :: [String] -> IO ExitStatus
 cmdList args = do
-    result <- parseArgsM args [OptionAll]
+    result <- parseArgsM args [OptionDone]
     case result of
-        Right (opts, xs) -> loadFileAndRun $ doList (OptionAll `elem` opts) xs
+        Right (opts, xs) -> loadFileAndRun $ doList (OptionDone `elem` opts) xs
         Left errs        -> mapM_ putErr errs >> return StatusInvalidCommand
 
 -- | Execute the 'ls' command.
