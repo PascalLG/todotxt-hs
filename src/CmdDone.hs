@@ -21,42 +21,79 @@
 -- THE SOFTWARE.
 -----------------------------------------------------------------------------
 
+{-# LANGUAGE OverloadedStrings #-}
+
 module CmdDone (
       cmdDone
+    , cmdUndone
 ) where
 
+import qualified Data.Text.IO as T
 import Data.Char (isDigit)
 import Data.List (partition)
+import Data.Monoid ((<>))
+import Console
+import Misc
 import Environment
 import Error
 import TodoFile
 
 -----------------------------------------------------------------------------
 
--- | Parse arguments for the 'do' command.
+-- | Parse arguments for the 'done' command.
 --
 cmdDone :: [String] -> IO ExitStatus
 cmdDone args = do
     result <- parseArgsM args [OptionRemove]
     case result of
         Right (opts, [rank]) | all isDigit rank 
-                      -> loadFileAndRun $ doDone (OptionRemove `elem` opts) (read rank)
+                      -> loadFileAndRun $ doDone (action opts) (read rank)
         Right (_, _)  -> putErr (ErrInvalidPriority "do") >> return StatusInvalidCommand
         Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
 
--- | Execute the 'do' command.
+    where
+        action :: [Option] -> Action
+        action opts | OptionRemove `elem` opts = Remove
+                    | otherwise                = MarkAsDone
+
+-- | Parse arguments for the 'undone' command.
 --
-doDone :: Bool -> Int -> [Task] -> IO ExitStatus
-doDone remove rank = update . partition ((== rank) . taskRank)
+cmdUndone :: [String] -> IO ExitStatus
+cmdUndone args = do
+    result <- parseArgsM args []
+    case result of
+        Right (_, [rank]) | all isDigit rank 
+                      -> loadFileAndRun $ doDone MarkAsUndone (read rank)
+        Right (_, _)  -> putErr ErrInvalidCommandArguments >> return StatusInvalidCommand
+        Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
+
+-- | Possible actions for the done/undone command.
+--
+data Action = MarkAsDone
+            | MarkAsUndone
+            | Remove
+            deriving (Eq)
+
+-- | Execute the 'done' or 'undone' command.
+--
+doDone :: Action -> Int -> [Task] -> IO ExitStatus
+doDone action rank = update . partition ((== rank) . taskRank)
     where
         update :: ([Task], [Task]) -> IO ExitStatus
         update ([match], rest) = do
-            let newtasks = if remove then rest 
-                                     else match { taskDone = True } : rest
+            let (newtasks, msg) = case action of
+                                    MarkAsDone   -> (match { taskDone = True } : rest, "marked as done")
+                                    MarkAsUndone -> (match { taskDone = False } : rest, "marked as undone")
+                                    Remove       -> (rest, "deleted")
             status <- saveFile newtasks
             case status of
-                Left err -> putErr err >> return StatusFailed
-                Right _  -> putStrLn ("TODO: task #" ++ (show rank) ++ " marked as done") >> return StatusOK
+                Left err -> do
+                    putErr err 
+                    return StatusIOError
+                Right _  -> do
+                    cm <- getConsoleMode
+                    T.putStrLn $  "todo: task " <> (printRank cm rank) <> " " <> msg <> "."
+                    return StatusOK
         update ([], _) = putErr (ErrUnknownTask rank) >> return StatusInvalidCommand
         update _       = error "unexpected state"
 

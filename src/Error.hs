@@ -40,6 +40,7 @@ import Console
 data ExitStatus =
       StatusOK                  -- Should be first so that (fromEnum StatusOK) == 0
     | StatusInvalidCommand
+    | StatusIOError
     | StatusFailed
     deriving (Show, Enum, Eq)
 
@@ -50,6 +51,7 @@ data Error =
     | ErrorWriteFile (Maybe FilePath) String
     | ErrUnsupportedOption String
     | ErrExtraArgument String
+    | ErrInvalidCommandArguments
     | ErrInvalidPriority String
     | ErrUnknownTask Int
     | ErrInvalidTask String
@@ -67,6 +69,7 @@ renderError (ErrorWriteFile Nothing desc)       = "cannot write file: " ++ desc
 renderError (ErrorWriteFile (Just path) desc)   = "cannot write file '" ++ path ++ "': " ++ desc
 renderError (ErrUnsupportedOption opt)          = "unsupported option: " ++ opt
 renderError (ErrExtraArgument arg)              = "extra argument: " ++ arg
+renderError (ErrInvalidCommandArguments)        = "invalid command arguments"
 renderError (ErrInvalidPriority cmd)            = "invalid command, type \"todo help " ++ cmd ++ "\" for more information"
 renderError (ErrUnknownTask num)                = "invalid task number " ++ show num
 renderError (ErrInvalidTask str)                = "invalid task number " ++ str

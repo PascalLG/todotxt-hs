@@ -21,35 +21,18 @@
 -- THE SOFTWARE.
 -----------------------------------------------------------------------------
 
-module Main where
+module Misc (
+      printRank
+) where
 
-import System.Environment (getArgs)
-import System.Exit (exitWith, ExitCode(..))
-import Error
-import CmdAdd
-import CmdList
-import CmdPriority
-import CmdDone
+import qualified Data.Text as T
+import Console
 
 -----------------------------------------------------------------------------
 
--- | Entry point.
+-- | Print a rank.
 --
-main :: IO ()
-main = do
-    status <- getArgs >>= run
-    exitWith $ if status == StatusOK then ExitSuccess
-                                     else ExitFailure (fromEnum status)
-
--- | Command dispatching.
---
-run :: [String] -> IO ExitStatus
-run ("ls":xs)       = cmdList xs
-run ("add":xs)      = cmdAdd xs
-run ("pri":xs)      = cmdPri xs
-run ("depri":xs)    = cmdDepri xs
-run ("done":xs)     = cmdDone xs
-run ("undone":xs)   = cmdUndone xs
-run (xs)            = cmdList xs
+printRank :: ConsoleMode -> Int -> T.Text
+printRank cm rank = foreColor cm AnsiYellow (T.pack ("#" ++ show rank))
 
 -----------------------------------------------------------------------------

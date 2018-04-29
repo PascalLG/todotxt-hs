@@ -102,18 +102,29 @@ Prioritised tasks appear first in listings.
 To mark a task as done, type:
 
 ```
-todo do <rank>
+todo done <rank>
 ```
 
-A done task no longer appears in listing (unless the `--all` flag is specified) but it is still present in the todo list. To completely remove a task, add the `--remove` flag:
+A done task no longer appears in listing (unless the `--all` flag is specified) but it is still present in the todo list. Alternatively, to completely remove a task, add the `--remove` flag:
 
 ```
-todo do --remove <rank>
+todo done --remove <rank>
 ```
+
+Note that removing a task physically deletes a line in the todo file, modifying the rank of all subsequent tasks.
+
+If you change your mind and want to mark a task as not done, type:
+
+```
+todo undone <rank>
+```
+
+Of course, this is only possible if the task was not previously removed.
 
 For example:
 
 ```
-todo do 3
-todo do --remove 17
+todo done 3
+todo undone 3
+todo done --remove 17
 ```
