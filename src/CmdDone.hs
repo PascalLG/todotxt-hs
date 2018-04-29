@@ -48,7 +48,7 @@ cmdDone args = do
     case result of
         Right (opts, [rank]) | all isDigit rank 
                       -> loadFileAndRun $ doDone (action opts) (read rank)
-        Right (_, _)  -> putErr (ErrInvalidPriority "do") >> return StatusInvalidCommand
+        Right (_, _)  -> putErr ErrInvalidCommandArguments >> return StatusInvalidCommand
         Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
 
     where

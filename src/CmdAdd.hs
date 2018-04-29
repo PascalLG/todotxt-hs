@@ -42,8 +42,8 @@ cmdAdd :: [String] -> IO ExitStatus
 cmdAdd args = do
     result <- parseArgsM args []
     case result of
-        Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
         Right (_, ts) -> loadFileAndRun $ doAdd ts
+        Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
 
 -- | Execute the 'add' command.
 --
@@ -53,10 +53,12 @@ doAdd names tasks = do
     let newtasks = map (makeTask today) (zip names [maximum (map taskRank tasks) + 1..])
     status <- saveFile (tasks ++ newtasks)
     case status of
-        Left err -> putErr err >> return StatusFailed
+        Left err -> do
+            putErr err
+            return StatusIOError
         Right _  -> do
             mode <- getConsoleMode
-            putStrLn "Added:"
+            putStrLn "added:"
             mapM_ (T.putStrLn . showTask mode) newtasks
             return StatusOK
     where

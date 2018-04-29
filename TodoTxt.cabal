@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b67be3268a37689a1b0fbcfbafca10ea628d7ccb3c26768f2daa405653290d18
+-- hash: ebd5e51767d15f09af59c99d4020f3f635e8a42d5f1533c91369b1d4b1d282b1
 
 name:           TodoTxt
 version:        1.0.0
@@ -41,6 +41,7 @@ library
       Console
       Environment
       Error
+      Misc
       TodoFile
   other-modules:
       Paths_TodoTxt

@@ -27,7 +27,7 @@ module CmdList (
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import Control.Monad (mapM_)
+import Control.Monad (mapM_, when)
 import Data.List (sort)
 import Console
 import Environment
@@ -42,21 +42,23 @@ cmdList :: [String] -> IO ExitStatus
 cmdList args = do
     result <- parseArgsM args [OptionAll]
     case result of
-        Left errs        -> mapM_ putErr errs >> return StatusInvalidCommand
         Right (opts, xs) -> loadFileAndRun $ doList (OptionAll `elem` opts) xs
+        Left errs        -> mapM_ putErr errs >> return StatusInvalidCommand
 
 -- | Execute the 'ls' command.
 --
 doList :: Bool -> [String] -> [Task] -> IO ExitStatus
-doList al patterns tasks = do
-    let f1 = if al then id else filter (not . taskDone)
+doList done patterns tasks = do
+    let f1 = if done then id else filter (not . taskDone)
     let f2 = if null patterns then id else filter (matchPattern (map (T.toCaseFold . T.pack) patterns))
-    mode <- getConsoleMode
-    putStrLn "#   Pri Created    Description"
-    mapM_ (T.putStrLn . showTask mode) ((sort . f2 . f1) tasks)
+    let list = (sort . f2 . f1) tasks
+    when ((not . null) list) $ do
+         cm <- getConsoleMode
+         putStrLn "#   Pri Created    Description"
+         mapM_ (T.putStrLn . showTask cm) list
     return StatusOK
 
--- | Test if a task contains all the words of a given
+-- | Check if a task contains all the words of a given
 -- list. Comparison is not case sensitive.
 --
 matchPattern :: [T.Text] -> Task -> Bool

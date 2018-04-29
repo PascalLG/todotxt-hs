@@ -21,14 +21,21 @@
 -- THE SOFTWARE.
 -----------------------------------------------------------------------------
 
+{-# LANGUAGE OverloadedStrings #-}
+
 module CmdPriority (
       cmdPri
     , cmdDepri
 ) where
 
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import Data.Char (isDigit, ord, chr)
 import Data.List (partition)
+import Data.Monoid ((<>))
+import Console
 import Environment
+import Misc
 import Error
 import TodoFile
 
@@ -41,8 +48,8 @@ cmdPri args = do
     result <- parseArgsM args []
     case result of
         Right (_, [rank, [pri]]) | all isDigit rank && pri >= 'A' && pri <= 'Z' 
-                      -> loadFileAndRun $ doPriority (read rank) (Just (ord pri - 64))
-        Right (_, _)  -> putErr (ErrInvalidPriority "pri") >> return StatusInvalidCommand
+                      -> loadFileAndRun $ doPriority (Just (ord pri - 64)) (read rank)
+        Right (_, _)  -> putErr ErrInvalidCommandArguments >> return StatusInvalidCommand
         Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
 
 -- | Parse arguments for the 'depri' command.
@@ -52,24 +59,29 @@ cmdDepri args = do
     result <- parseArgsM args []
     case result of
         Right (_, [rank]) | all isDigit rank 
-                      -> loadFileAndRun $ doPriority (read rank) Nothing
-        Right (_, _)  -> putErr (ErrInvalidPriority "depri") >> return StatusInvalidCommand
+                      -> loadFileAndRun $ doPriority Nothing (read rank)
+        Right (_, _)  -> putErr ErrInvalidCommandArguments >> return StatusInvalidCommand
         Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
 
 -- | Execute the 'pri' or 'depri' command.
 --
-doPriority :: Int -> Maybe Int -> [Task] -> IO ExitStatus
-doPriority rank pri = update . partition ((== rank) . taskRank)
+doPriority :: Maybe Int -> Int -> [Task] -> IO ExitStatus
+doPriority pri rank = update . partition ((== rank) . taskRank)
     where
         update :: ([Task], [Task]) -> IO ExitStatus
         update ([match], rest) = do
-            status <- saveFile $ match {taskPriority = pri } : rest
+            let newtasks = match {taskPriority = pri } : rest
+            status <- saveFile newtasks
             case status of
-                Left err -> putErr err >> return StatusFailed
+                Left err -> do
+                    putErr err
+                    return StatusIOError
                 Right _  -> do
-                    putStrLn $ case pri of
-                        Nothing -> "TODO: task #" ++ (show rank) ++ " deprioritized"
-                        Just p  -> "TODO: task #" ++ (show rank) ++ " prioritized (" ++ [chr (p + 64)] ++ ")"
+                    cm <- getConsoleMode
+                    let msg = case pri of
+                                Nothing -> "deprioritised"
+                                Just p  -> "prioritised " <> foreColor cm AnsiGreen (T.pack ("(" ++ [chr (p + 64)] ++ ")"))
+                    T.putStrLn $  "todo: task " <> (printRank cm rank) <> " " <> msg <> "."
                     return StatusOK
         update ([], _) = putErr (ErrUnknownTask rank) >> return StatusInvalidCommand
         update _       = error "unexpected state"
