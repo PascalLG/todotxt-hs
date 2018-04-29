@@ -30,6 +30,7 @@ import CmdAdd
 import CmdList
 import CmdPriority
 import CmdDone
+import CmdPurge
 
 -----------------------------------------------------------------------------
 
@@ -50,6 +51,7 @@ run ("pri":xs)      = cmdPri xs
 run ("depri":xs)    = cmdDepri xs
 run ("done":xs)     = cmdDone xs
 run ("undone":xs)   = cmdUndone xs
+run ("purge":xs)    = cmdPurge xs
 run (xs)            = cmdList xs
 
 -----------------------------------------------------------------------------

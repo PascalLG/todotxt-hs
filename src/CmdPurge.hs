@@ -21,32 +21,40 @@
 -- THE SOFTWARE.
 -----------------------------------------------------------------------------
 
-module Misc (
-      printRank
-    , saveTasks
+{-# LANGUAGE OverloadedStrings #-}
+
+module CmdPurge (
+      cmdPurge
 ) where
 
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import Console
+import Data.List (partition)
+import Data.Monoid ((<>))
+import Environment
+import Misc
 import Error
 import TodoFile
 
 -----------------------------------------------------------------------------
 
--- | Print a rank.
+-- | Parse arguments for the 'purge' command.
 --
-printRank :: ConsoleMode -> Int -> T.Text
-printRank cm rank = foreColor cm AnsiYellow (T.pack ("#" ++ show rank))
+cmdPurge :: [String] -> IO ExitStatus
+cmdPurge args = do
+    result <- parseArgsM args []
+    case result of
+        Right (_, []) -> loadFileAndRun $ doPurge
+        Right (_, _)  -> putErr ErrInvalidCommandArguments >> return StatusInvalidCommand
+        Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
 
--- | Save the list of tasks and display either an error
--- or a success message.
+-- | Execute the 'purge' command.
 --
-saveTasks :: [Task] -> T.Text -> IO ExitStatus
-saveTasks tasks msg = do
-    status <- saveFile tasks
-    case status of
-        Left err -> putErr err >> return StatusIOError
-        Right _  -> T.putStrLn msg >> return StatusOK
+doPurge :: [Task] -> IO ExitStatus
+doPurge = update . partition taskDone
+    where
+        update :: ([Task], [Task]) -> IO ExitStatus
+        update (del, rest)
+            | null del  = putStrLn "todo: nothing to purge." >> return StatusOK
+            | otherwise = saveTasks rest $ "todo: " <> T.pack (show (length del)) <> " tasks deleted."
 
 -----------------------------------------------------------------------------

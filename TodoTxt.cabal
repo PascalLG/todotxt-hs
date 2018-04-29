@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ebd5e51767d15f09af59c99d4020f3f635e8a42d5f1533c91369b1d4b1d282b1
+-- hash: f78a5f73178f9644e1c61d285d6ae4e5db2a1022160449bc8b7a8bd68e381eed
 
 name:           TodoTxt
 version:        1.0.0
@@ -38,6 +38,7 @@ library
       CmdDone
       CmdList
       CmdPriority
+      CmdPurge
       Console
       Environment
       Error
