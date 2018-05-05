@@ -25,6 +25,7 @@
 
 module CmdPurge (
       cmdPurge
+    , renumTasks    -- exported for unit testing
 ) where
 
 import qualified Data.Text as T
@@ -41,20 +42,26 @@ import TodoFile
 --
 cmdPurge :: [String] -> IO ExitStatus
 cmdPurge args = do
-    result <- parseArgsM args []
+    result <- parseArgsM args [OptionPack]
     case result of
-        Right (_, []) -> loadFileAndRun $ doPurge
-        Right (_, _)  -> putErr ErrInvalidCommandArguments >> return StatusInvalidCommand
-        Left errs     -> mapM_ putErr errs >> return StatusInvalidCommand
+        Right (opts, []) -> loadFileAndRun $ doPurge (OptionPack `elem` opts)
+        Right (_, _)     -> putErr ErrInvalidCommandArguments >> return StatusInvalidCommand
+        Left errs        -> mapM_ putErr errs >> return StatusInvalidCommand
 
 -- | Execute the 'purge' command.
 --
-doPurge :: [Task] -> IO ExitStatus
-doPurge = update . partition taskDone
+doPurge :: Bool -> [Task] -> IO ExitStatus
+doPurge pack = update . partition taskDone
     where
         update :: ([Task], [Task]) -> IO ExitStatus
         update (del, rest)
             | null del  = putStrLn "todo: nothing to purge." >> return StatusOK
-            | otherwise = saveTasks rest $ "todo: " <> T.pack (show (length del)) <> " tasks deleted."
+            | otherwise = let transform = if pack then renumTasks else id
+                          in  saveTasks (transform rest) $ "todo: " <> T.pack (show (length del)) <> " tasks deleted."
+
+-- | Renumber tasks, removing blank lines.
+--
+renumTasks :: [Task] -> [Task]
+renumTasks = map (\(r, t) -> t { taskRank = r }) . zip [1..] . sortByRank
 
 -----------------------------------------------------------------------------

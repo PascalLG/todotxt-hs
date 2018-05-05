@@ -26,6 +26,8 @@
 module TodoFile (
       Task(..)
     , showTask
+    , sortByRank
+    , sortByNaturalOrder
     , todoFilePath
     , loadFile
     , loadFileAndRun
@@ -65,13 +67,6 @@ data Task = Task { taskRank :: Int                      -- rank in the file
                  , taskName :: T.Text                   -- task description
                  } deriving (Show, Eq)
 
-instance Ord Task where
-    compare (Task _  d1 _         _ _ _) (Task _  d2 _         _ _ _) | d1 /= d2 = compare d1 d2
-    compare (Task _  _  (Just p1) _ _ _) (Task _  _  (Just p2) _ _ _) | p1 /= p2 = compare p1 p2
-    compare (Task _  _  (Nothing) _ _ _) (Task _  _  (Just _)  _ _ _)            = GT
-    compare (Task _  _  (Just _)  _ _ _) (Task _  _  (Nothing) _ _ _)            = LT
-    compare (Task r1 _  _         _ _ _) (Task r2 _  _         _ _ _)            = compare r1 r2
-
 -- | Print a task. The output is properly formatted in columns, and 
 -- context and project tags are colourised.
 --
@@ -106,6 +101,27 @@ showTask mode (Task rank done pri _ creat name)
                     | "@" `T.isPrefixOf` word = foreColor cm AnsiMagenta word
                     | "+" `T.isPrefixOf` word = foreColor cm AnsiCyan word
                     | otherwise               = word
+
+-- | Sort a list of tasks by rank.
+--
+sortByRank :: [Task] -> [Task]
+sortByRank = sortBy comp
+    where
+        comp :: Task -> Task -> Ordering
+        comp (Task r1 _ _ _ _ _) (Task r2 _ _ _ _ _) = compare r1 r2
+
+-- | Sort a list of tasks by natural order: tasks with high
+-- priority go first, deleted tasks go last.
+--
+sortByNaturalOrder :: [Task] -> [Task]
+sortByNaturalOrder = sortBy comp
+    where
+        comp :: Task -> Task -> Ordering
+        comp (Task _  d1 _         _ _ _) (Task _  d2 _         _ _ _) | d1 /= d2 = compare d1 d2
+        comp (Task _  _  (Just p1) _ _ _) (Task _  _  (Just p2) _ _ _) | p1 /= p2 = compare p1 p2
+        comp (Task _  _  (Nothing) _ _ _) (Task _  _  (Just _)  _ _ _)            = GT
+        comp (Task _  _  (Just _)  _ _ _) (Task _  _  (Nothing) _ _ _)            = LT
+        comp (Task r1 _  _         _ _ _) (Task r2 _  _         _ _ _)            = compare r1 r2
 
 -----------------------------------------------------------------------------
 -- File handling.
@@ -228,11 +244,8 @@ saveFile ts = do
 -- if necessary.
 --
 generateFile :: [Task] -> T.Text
-generateFile = T.intercalate "\n" . dropWhileEnd T.null . assemble 1 . sortBy compareRank
+generateFile = T.intercalate "\n" . dropWhileEnd T.null . assemble 1 . sortByRank
     where
-        compareRank :: Task -> Task -> Ordering
-        compareRank (Task r1 _ _ _ _ _) (Task r2 _ _ _ _ _) = compare r1 r2
-
         assemble :: Int -> [Task] -> [T.Text]
         assemble _ [] = []
         assemble r l@(t@(Task rn _ _ _ _ _):ts) | r == rn   = printTask t : assemble (r + 1) ts

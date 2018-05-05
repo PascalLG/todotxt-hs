@@ -28,7 +28,6 @@ module CmdList (
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Control.Monad (mapM_, when)
-import Data.List (sort)
 import Console
 import Environment
 import Error
@@ -51,7 +50,7 @@ doList :: Bool -> [String] -> [Task] -> IO ExitStatus
 doList done patterns tasks = do
     let f1 = if done then id else filter (not . taskDone)
     let f2 = if null patterns then id else filter (matchPattern (map (T.toCaseFold . T.pack) patterns))
-    let list = (sort . f2 . f1) tasks
+    let list = (sortByNaturalOrder . f2 . f1) tasks
     when ((not . null) list) $ do
          cm <- getConsoleMode
          putStrLn "#   Pri Created    Description"

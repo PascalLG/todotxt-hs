@@ -39,13 +39,15 @@ import Error
 data Option =
       OptionDone
     | OptionRemove
+    | OptionPack
     deriving (Show, Ord, Eq)
 
 -- | Map between option flags, option letters and option full names.
 --
 supportedOptions :: [(Option, Char, String)]
 supportedOptions = [ ( OptionDone,   'd', "done"    )
-                   , ( OptionRemove, 'r', "remove"  )]
+                   , ( OptionRemove, 'r', "remove"  )
+                   , ( OptionPack,   'p', "pack"    )]
 
 -- | Lookup a short option (from its letter).
 --
