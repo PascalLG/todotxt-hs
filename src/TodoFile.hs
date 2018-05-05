@@ -228,7 +228,7 @@ saveFile ts = do
 -- if necessary.
 --
 generateFile :: [Task] -> T.Text
-generateFile = T.intercalate "\n" . assemble 1 . sortBy compareRank
+generateFile = T.intercalate "\n" . dropWhileEnd T.null . assemble 1 . sortBy compareRank
     where
         compareRank :: Task -> Task -> Ordering
         compareRank (Task r1 _ _ _ _ _) (Task r2 _ _ _ _ _) = compare r1 r2
@@ -262,5 +262,11 @@ generateFile = T.intercalate "\n" . assemble 1 . sortBy compareRank
 showDate :: Maybe Day -> T.Text
 showDate (Just x)  = let (y, m, d) = toGregorian x in T.pack $ printf "%04d-%02d-%02d" y m d
 showDate (Nothing) = T.empty
+
+-- | Drops the largest suffix of a list in which the given predicate
+-- holds for all elements. (Copied from base-4.5.0.0)
+--
+dropWhileEnd :: (a -> Bool) -> [a] -> [a]
+dropWhileEnd p = foldr (\x xs -> if p x && null xs then [] else x : xs) []
 
 -----------------------------------------------------------------------------
