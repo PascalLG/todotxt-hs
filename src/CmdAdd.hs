@@ -50,7 +50,7 @@ cmdAdd args = do
 doAdd :: [String] -> [Task] -> IO ExitStatus
 doAdd names tasks = do
     today <- utctDay <$> getCurrentTime
-    let newtasks = map (makeTask today) (zip names [maximum (map taskRank tasks) + 1..])
+    let newtasks = map (makeTask today) (zip names [nextRank tasks..])
     status <- saveFile (tasks ++ newtasks)
     case status of
         Left err -> do
@@ -69,5 +69,13 @@ doAdd names tasks = do
                                           , taskCompletionDate = Nothing
                                           , taskCreationDate = Just date
                                           , taskName = T.pack name }
+
+-- | Determine the next free rank in a (possibly empty)
+-- list of tasks.
+--
+nextRank :: [Task] -> Int
+nextRank t
+    | null t    = 1
+    | otherwise = maximum (map taskRank t) + 1
 
 -----------------------------------------------------------------------------
