@@ -21,45 +21,29 @@
 -- THE SOFTWARE.
 -----------------------------------------------------------------------------
 
-module Main where
+module CmdAddSpec (
+    spec
+) where
 
-import System.Environment (getArgs)
-import System.Exit (exitWith, ExitCode(..))
-import Error
-import CmdHelp
+import qualified Data.Text as T
+import Data.Time.Clock (UTCTime(..), getCurrentTime)
+import Test.Hspec
+import TodoFile
 import CmdAdd
-import CmdList
-import CmdPriority
-import CmdDone
-import CmdPurge
 
 -----------------------------------------------------------------------------
 
--- | Entry point.
---
-main :: IO ()
-main = do
-    status <- getArgs >>= run
-    exitWith $ if status == StatusOK then ExitSuccess
-                                     else ExitFailure (fromEnum status)
-
--- | Command dispatching.
---
-run :: [String] -> IO ExitStatus
-run ("ls":xs)            = cmdList xs
-run ("add":xs)           = cmdAdd xs
-run ("pri":xs)           = cmdPri xs
-run ("depri":xs)         = cmdDepri xs
-run ("done":xs)          = cmdDone xs
-run ("undone":xs)        = cmdUndone xs
-run ("purge":xs)         = cmdPurge xs
-run ("help":"ls":xs)     = cmdHelp helpList xs
-run ("help":"add":xs)    = cmdHelp helpAdd xs
-run ("help":"pri":xs)    = cmdHelp helpPriority xs
-run ("help":"depri":xs)  = cmdHelp helpPriority xs
-run ("help":"done":xs)   = cmdHelp helpDone xs
-run ("help":"undone":xs) = cmdHelp helpDone xs
-run ("help":"purge":xs)  = cmdHelp helpPurge xs
-run (_)                  = printUsage >> return StatusOK
+spec :: Spec
+spec = do
+    describe "CmdAdd" $ do
+        it "makes a new task" $ do
+            today <- utctDay <$> getCurrentTime
+            let task = makeTask today ("test", 17)
+            taskRank task `shouldBe` 17
+            taskDone task `shouldBe` False
+            taskPriority task `shouldBe` Nothing
+            taskCompletionDate task `shouldBe` Nothing
+            taskCreationDate task `shouldBe` Just today
+            taskName task `shouldBe` T.pack ("test")
 
 -----------------------------------------------------------------------------

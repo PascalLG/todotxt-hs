@@ -26,6 +26,7 @@
 module CmdPriority (
       cmdPri
     , cmdDepri
+    , helpPriority
 ) where
 
 import qualified Data.Text as T
@@ -85,5 +86,30 @@ doPriority pri rank = update . partition ((== rank) . taskRank)
                     return StatusOK
         update ([], _) = putErr (ErrUnknownTask rank) >> return StatusInvalidCommand
         update _       = error "unexpected state"
+
+-----------------------------------------------------------------------------
+
+helpPriority :: IO ()
+helpPriority = do
+    putLine $ "{*:USAGE}}"
+    putLine $ "    {y:todo pri}} <{y:task number}}> <{y:priority}}>"
+    putLine $ "    {y:todo depri}} <{y:task number}}>"
+    putLine $ ""
+    putLine $ "{*:DESCRIPTION}}"
+    putLine $ "    Assign or remove a task a priority. The task number is the actual line"
+    putLine $ "    number of this task in the {m:todo.txt}} file. You can retrieve it using the"
+    putLine $ "    todo ls command. The priority is represented by a letter from {m:A}} to {m:Z}}, {m:A}}"
+    putLine $ "    indicating the most important tasks and {m:Z}} the less important ones. For"
+    putLine $ "    example:"
+    putLine $ ""
+    putLine $ "        {y:todo pri 3 A}}"
+    putLine $ "        {y:todo pri 15 H}}"
+    putLine $ "        {y:todo depri 9}}"
+    putLine $ ""
+    putLine $ "    Prioritised tasks appear first in listings."
+    putLine $ ""
+    putLine $ "{*:OPTIONS}}"
+    putLine $ "    None."
+    putLine $ ""
 
 -----------------------------------------------------------------------------

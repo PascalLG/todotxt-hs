@@ -25,12 +25,14 @@
 
 module CmdPurge (
       cmdPurge
+    , helpPurge
     , renumTasks    -- exported for unit testing
 ) where
 
 import qualified Data.Text as T
 import Data.List (partition)
 import Data.Monoid ((<>))
+import Console
 import Environment
 import Misc
 import Error
@@ -63,5 +65,22 @@ doPurge pack = update . partition taskDone
 --
 renumTasks :: [Task] -> [Task]
 renumTasks = map (\(r, t) -> t { taskRank = r }) . zip [1..] . sortByRank
+
+-----------------------------------------------------------------------------
+
+helpPurge :: IO ()
+helpPurge = do
+    putLine $ "{*:USAGE}}"
+    putLine $ "    {y:todo purge}} [{y:--pack}}]"
+    putLine $ ""
+    putLine $ "{*:DESCRIPTION}}"
+    putLine $ "    Delete all tasks that are marked as done. By default, corresponding lines"
+    putLine $ "    are only erased, so the task numbering is preserved. By adding the {y:--pack}}"
+    putLine $ "    flag, you can have all these empty lines physically deleted. The resulting"
+    putLine $ "    file is shorter, but some tasks may be assigned new ranks."
+    putLine $ ""
+    putLine $ "{*:OPTIONS}}"
+    putLine $ "    {y:-p}}, {y:--pack}}       Remove empty lines."
+    putLine $ ""
 
 -----------------------------------------------------------------------------

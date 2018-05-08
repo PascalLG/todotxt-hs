@@ -26,11 +26,14 @@ module Console (
     , ConsoleMode(..)
     , getConsoleMode
     , foreColor
+    , putLine
 ) where
 
 import qualified Data.Text as T
 import System.IO (hIsTerminalDevice, stdout)
 import System.Environment (lookupEnv)
+import Data.Maybe (isJust, fromJust)
+import Data.List (uncons)
 
 -----------------------------------------------------------------------------
 
@@ -87,5 +90,69 @@ ansiCodeForColor color = "\ESC[" ++ (show (30 + fromEnum color)) ++ "m"
 foreColor :: ConsoleMode -> AnsiColor -> T.Text -> T.Text
 foreColor ModeBasic _     text = text
 foreColor _         color text = T.pack (ansiCodeForColor color) `T.append` text `T.append` T.pack "\ESC[39m"
+
+-----------------------------------------------------------------------------
+
+-- | Print a string containing formatting tags. See @processTags@ in the
+-- PrettyPrint.Internal module for more information.
+--
+putLine :: String -> IO ()
+putLine text = do
+    cm <- getConsoleMode
+    putStrLn $ processTags cm [State { isBold = False
+                                     , isUnderline = False
+                                     , textColor = AnsiWhite }] text
+
+-- | Text attributes.
+--
+data State = State { isBold :: !Bool
+                   , isUnderline :: !Bool
+                   , textColor :: !AnsiColor }
+
+-- | Process formatting tags and generate a string containing ANSI escape
+-- sequences. Tags follow the pattern {x:text}} where "x" is a character
+-- indicating a text attribute (colour, bold or underline) and "text" is 
+-- the string that attribute applies to.
+--
+processTags :: ConsoleMode -> [State] -> String -> String
+processTags _ _ "" = ""
+
+processTags cm stack ('{':'*':':':cs) = emitEscapeCode cm old new ++ processTags cm (new:stack) cs
+    where old = head stack
+          new = old { isBold = True }
+
+processTags cm stack ('{':'_':':':cs) = emitEscapeCode cm old new ++ processTags cm (new:stack) cs
+    where old = head stack
+          new = old { isUnderline = True }
+
+processTags cm stack ('{':t:':':cs) | isJust color = emitEscapeCode cm old new ++ processTags cm (new:stack) cs
+    where  color = lookup t colors
+           old = head stack
+           new = old { textColor = fromJust color }
+
+processTags cm stack ('}':'}':cs) | length stack > 1 = emitEscapeCode cm old new ++ processTags cm rest cs
+    where Just (old, rest) = uncons stack
+          new = head rest
+
+processTags cm stack (c:cs) = c : processTags cm stack cs
+
+-- | Emit ANSI escape code corresponding to a transition between
+-- two states of text attributes.
+--
+emitEscapeCode :: ConsoleMode -> State -> State -> String
+emitEscapeCode ModeBasic _ _ = ""
+emitEscapeCode _ (State b1 u1 c1) (State b2 u2 c2) = emitBold b1 b2 ++ emitUnderline u1 u2 ++ emitColor c1 c2
+    where
+        emitBold False True  = "\ESC[1m"
+        emitBold True  False = "\ESC[22m"
+        emitBold _     _     = ""
+
+        emitUnderline False True  = "\ESC[4m"
+        emitUnderline True  False = "\ESC[24m"
+        emitUnderline _     _     = ""
+
+        emitColor co1 co2
+            | co1 /= co2 = ansiCodeForColor co2
+            | otherwise  = ""
 
 -----------------------------------------------------------------------------

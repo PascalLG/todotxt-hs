@@ -23,6 +23,7 @@
 
 module CmdList (
       cmdList
+    , helpList
 ) where
 
 import qualified Data.Text as T
@@ -63,5 +64,32 @@ doList done patterns tasks = do
 matchPattern :: [T.Text] -> Task -> Bool
 matchPattern patterns task = let content = T.words $ T.toCaseFold $ taskName task
                              in  all (flip elem content) patterns
+
+-----------------------------------------------------------------------------
+
+helpList :: IO ()
+helpList = do
+    putLine $ "{*:USAGE}}"
+    putLine $ "    {y:todo ls}} [{y:--done}}] [{y:keywords...}}]"
+    putLine $ ""
+    putLine $ "{*:DESCRIPTION}}"
+    putLine $ "    List the content of the {m:todo.txt}} file, one task a line. The first column"
+    putLine $ "    displays the task rank (actually the line number in the file). This number"
+    putLine $ "    is used to refer to tasks in other commands. The following columns display"
+    putLine $ "    the priority (if any) as a letter from {m:A}} to {m:Z}}, the creation date, and the"
+    putLine $ "    task description. The list is sorted by decreasing priority. Tasks having"
+    putLine $ "    no priority come at the end of the list. Although the file format allows"
+    putLine $ "    for a completion date, it is currently never displayed."
+    putLine $ ""
+    putLine $ "    Finished tasks are not printed by default. To list them as well, add the"
+    putLine $ "    {y:--done}} flag."
+    putLine $ ""
+    putLine $ "    You can filter the task list by adding one or more keywords (or tags) after"
+    putLine $ "    the command. Only tasks containing all the specified keywords and tags are"
+    putLine $ "    listed. Comparison is not case sensitive."
+    putLine $ ""
+    putLine $ "{*:OPTIONS}}"
+    putLine $ "    {y:-d}}, {y:--done}}       List done tasks as well."
+    putLine $ ""
 
 -----------------------------------------------------------------------------

@@ -23,6 +23,9 @@
 
 module CmdAdd (
       cmdAdd
+    , helpAdd
+    , makeTask  -- exported for unit testing
+    , nextRank  -- exported for unit testing
 ) where
 
 import qualified Data.Text as T
@@ -61,14 +64,16 @@ doAdd names tasks = do
             putStrLn "added:"
             mapM_ (T.putStrLn . showTask mode) newtasks
             return StatusOK
-    where
-        makeTask :: Day -> (String, Int) -> Task
-        makeTask date (name, rank) = Task { taskRank = rank
-                                          , taskDone = False
-                                          , taskPriority = Nothing
-                                          , taskCompletionDate = Nothing
-                                          , taskCreationDate = Just date
-                                          , taskName = T.pack name }
+
+-- | Make a new task for the specified date, name and rank.
+--
+makeTask :: Day -> (String, Int) -> Task
+makeTask date (name, rank) = Task { taskRank = rank
+                                  , taskDone = False
+                                  , taskPriority = Nothing
+                                  , taskCompletionDate = Nothing
+                                  , taskCreationDate = Just date
+                                  , taskName = T.pack name }
 
 -- | Determine the next free rank in a (possibly empty)
 -- list of tasks.
@@ -77,5 +82,38 @@ nextRank :: [Task] -> Int
 nextRank t
     | null t    = 1
     | otherwise = maximum (map taskRank t) + 1
+
+-----------------------------------------------------------------------------
+
+helpAdd :: IO ()
+helpAdd = do
+    putLine $ "{*:USAGE}}"
+    putLine $ "    {y:todo add}} <{y:tasks}}>"
+    putLine $ ""
+    putLine $ "{*:DESCRIPTION}}"
+    putLine $ "    Add one or more tasks to the to-do list. Each task description must be"
+    putLine $ "    enclosed between quotes (or double quotes) to prevent the shell from"
+    putLine $ "    interpreting spaces and other special characters. For example:"
+    putLine $ ""
+    putLine $ "        {y:todo add \"Reply to John's mail\"}}"
+    putLine $ "        {y:todo add \"Buy some potatoes\" \"Call Margaret\"}}"
+    putLine $ ""
+    putLine $ "    A task description can contain tags. A project tag starts with a plus sign"
+    putLine $ "    ({m:+}}). It indicates the project this task belongs to. A context tag starts"
+    putLine $ "    with an at sign ({m:@}}). It indicates the context (or type) of this task. For"
+    putLine $ "    example:"
+    putLine $ ""
+    putLine $ "        {y:todo add \"Create a signed package for +TodoTxt @dev\"}}"
+    putLine $ "        {y:todo add \"Call Margaret @phone\"}}"
+    putLine $ ""
+    putLine $ "    You can use as many tags as you wish and they can appear anywhere in a task"
+    putLine $ "    description. In task listings, tags are colourised to help identify them."
+    putLine $ "    Of course, a tag is just a convention, it is not interpreted by the"
+    putLine $ "    application. You can assign a different meaning to + and @ tags if you"
+    putLine $ "    wish."
+    putLine $ ""
+    putLine $ "{*:OPTIONS}}"
+    putLine $ "    None."
+    putLine $ ""
 
 -----------------------------------------------------------------------------

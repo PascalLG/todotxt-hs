@@ -51,3 +51,4 @@ tests:
     - -Wall
     dependencies:
     - TodoTxt
+    - hspec
